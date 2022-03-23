@@ -87,7 +87,7 @@ def run_demo(net, image_provider, height_size, cpu, track, smooth):
     net = net.eval()
     if not cpu:
         net = net.cuda()
-
+    type=4
     stride = 8
     upsample_ratio = 4
     num_keypoints = Pose.num_kpts
@@ -117,122 +117,827 @@ def run_demo(net, image_provider, height_size, cpu, track, smooth):
             pose = Pose(pose_keypoints, pose_entries[n][18])
             current_poses.append(pose)
             # 图片的尺寸为480*640
+
         if len(current_poses) > 0:
             mainpose = current_poses[0]
             # mainpose.keypoints 存储着拍摄到的主要人像的关节点的坐标信息，可以通过这个来计算动作的标准程度,下面这条语句可以用来画圆环或者实心圆，从而作为动作标准与否的实时可视化显示
             # 要去算四个角度，然后根据这个角度来判断动作的标准程度
-            # 2 3 4 是右肩右肘右手腕   5 6 7 是左肩左肘左手腕  8  11是右胯和左胯
-            if not (mainpose.keypoints[2][0] != -1 and mainpose.keypoints[2][1] != -1 and mainpose.keypoints[3][
-                0] != -1 and mainpose.keypoints[3][1] != -1 and mainpose.keypoints[4][0] != -1 and
-                    mainpose.keypoints[4][1] != -1 and mainpose.keypoints[5][0] != -1 and mainpose.keypoints[5][
-                        1] != -1 and mainpose.keypoints[6][0] != -1 and mainpose.keypoints[6][1] != -1 and
-                    mainpose.keypoints[7][0] != -1 and mainpose.keypoints[7][1] != -1):
-                img_pil = Image.fromarray(img)
-                draw = ImageDraw.Draw(img_pil)
-                draw.text((100, 100), "请退后几步，露出全身", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
-                img = np.array(img_pil)
-            else:
-                cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]), 20, (209, 216, 129), 2)  # RGB是反着的
-                cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), 20, (209, 216, 129), 2)  # RGB是反着的
-                cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]), 20, (209, 216, 129), 2)  # RGB是反着的
-                cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), 20, (209, 216, 129), 2)  # RGB是反着的
-                a = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[3][0]) ** 2 + (
+
+            if(type==1):
+                # 2 3 4 是右肩右肘右手腕   5 6 7 是左肩左肘左手腕  8  11是右胯和左胯
+                if not (mainpose.keypoints[2][0] != -1 and mainpose.keypoints[2][1] != -1 and mainpose.keypoints[3][
+                    0] != -1 and mainpose.keypoints[3][1] != -1 and mainpose.keypoints[4][0] != -1 and
+                        mainpose.keypoints[4][1] != -1 and mainpose.keypoints[5][0] != -1 and mainpose.keypoints[5][
+                            1] != -1 and mainpose.keypoints[6][0] != -1 and mainpose.keypoints[6][1] != -1 and
+                        mainpose.keypoints[7][0] != -1 and mainpose.keypoints[7][1] != -1):
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    draw.text((100, 100), "请退后几步，露出全身", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+                else:
+                    cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    a = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[3][0]) ** 2 + (
                             mainpose.keypoints[2][1] - mainpose.keypoints[3][1]) ** 2)
-                b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
+                    b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
                             mainpose.keypoints[2][1] - mainpose.keypoints[8][1]) ** 2)
-                c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[3][0]) ** 2 + (
+                    c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[3][0]) ** 2 + (
                             mainpose.keypoints[8][1] - mainpose.keypoints[3][1]) ** 2)
-                angle1 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
-                # 右肩角度
+                    angle1 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右肩角度
 
-                a = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[4][0]) ** 2 + (
-                        mainpose.keypoints[3][1] - mainpose.keypoints[4][1]) ** 2)
-                b = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[2][0]) ** 2 + (
-                        mainpose.keypoints[3][1] - mainpose.keypoints[2][1]) ** 2)
-                c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[4][0]) ** 2 + (
-                        mainpose.keypoints[2][1] - mainpose.keypoints[4][1]) ** 2)
-                angle2 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
-                # 右肘角度
+                    a = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[4][0]) ** 2 + (
+                            mainpose.keypoints[3][1] - mainpose.keypoints[4][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[2][0]) ** 2 + (
+                            mainpose.keypoints[3][1] - mainpose.keypoints[2][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[4][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[4][1]) ** 2)
+                    angle2 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右肘角度
 
-                a = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[6][0]) ** 2 + (
-                        mainpose.keypoints[5][1] - mainpose.keypoints[6][1]) ** 2)
-                b = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[11][0]) ** 2 + (
-                        mainpose.keypoints[5][1] - mainpose.keypoints[11][1]) ** 2)
-                c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[6][0]) ** 2 + (
-                        mainpose.keypoints[11][1] - mainpose.keypoints[6][1]) ** 2)
-                angle3 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
-                # 左肩角度
+                    a = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[6][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[6][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[11][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[11][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[6][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[6][1]) ** 2)
+                    angle3 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左肩角度
 
-                a = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[7][0]) ** 2 + (
-                        mainpose.keypoints[6][1] - mainpose.keypoints[7][1]) ** 2)
-                b = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[5][0]) ** 2 + (
-                        mainpose.keypoints[6][1] - mainpose.keypoints[5][1]) ** 2)
-                c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[7][0]) ** 2 + (
-                        mainpose.keypoints[5][1] - mainpose.keypoints[7][1]) ** 2)
-                angle4 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
-                # 左肘角度
-                # 认为肩部角度越大越好  45度标准  认为肘部角度越小越好  90度标准
-                # 按照角度在20的圆内画圆盘
-                if angle1 > 0:
-                    if angle1 < 3.14 / 8:
-                        cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
-                                   int(20 * angle1 / 3.14 * 4), (0, 0, 255),
-                                   -1)  # RGB是反着的
-                    else:
-                        if angle1 > 3.14 / 4:
-                            angle1 = 3.14 / 4
-                        cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
-                                   int(20 * angle1 / 3.14 * 4), (0, 255, 0),
-                                   -1)  # RGB是反着的
-                if angle3 > 0:
-                    if angle3 < 3.14 / 8:
-                        cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
-                                   int(20 * angle3 / 3.14 * 4), (0, 0, 255),
-                                   -1)  # RGB是反着的
-                    else:
-                        if angle3 > 3.14 / 4:
-                            angle3 = 3.14 / 4
-                        cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
-                                   int(20 * angle3 / 3.14 * 4), (0, 255, 0),
-                                   -1)  # RGB是反着的
-                if angle2 <= 3.14:
-                    if angle2 > 2.5:
-                        loss = (3.14 - angle2) / 3.14 * 2
-                        cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
-                                   (0, 0, 255),
-                                   -1)  # RGB是反着的
-                    else:
-                        if angle2 < 3.14 / 2:
-                            angle2 = 3.14 / 2
-                        loss = (3.14 - angle2) / 3.14 * 2
-                        cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
-                                   (0, 255, 0),
-                                   -1)  # RGB是反着的
-                if angle4 <= 3.14:
-                    if angle4 > 2.5:
-                        loss = (3.14 - angle4) / 3.14 * 2
-                        cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
-                                   (0, 0, 255),
-                                   -1)  # RGB是反着的
-                    else:
-                        if angle4 < 3.14 / 2:
-                            angle4 = 3.14 / 2
-                        loss = (3.14 - angle4) / 3.14 * 2
-                        cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
-                                   (0, 255, 0),
-                                   -1)  # RGB是反着的
+                    a = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[7][0]) ** 2 + (
+                            mainpose.keypoints[6][1] - mainpose.keypoints[7][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[5][0]) ** 2 + (
+                            mainpose.keypoints[6][1] - mainpose.keypoints[5][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[7][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[7][1]) ** 2)
+                    angle4 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左肘角度
+                    # 认为肩部角度越大越好  45度标准  认为肘部角度越小越好  90度标准
+                    # 按照角度在20的圆内画圆盘
+                    if angle1 > 0:
+                        if angle1 < 3.14 / 8:
+                            cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                       int(20 * angle1 / 3.14 * 4), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle1 > 3.14 / 4:
+                                angle1 = 3.14 / 4
+                            cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                       int(20 * angle1 / 3.14 * 4), (0, 255, 0),
+                                       -1)  # RGB是反着的
+                    if angle3 > 0:
+                        if angle3 < 3.14 / 8:
+                            cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                       int(20 * angle3 / 3.14 * 4), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle3 > 3.14 / 4:
+                                angle3 = 3.14 / 4
+                            cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                       int(20 * angle3 / 3.14 * 4), (0, 255, 0),
+                                       -1)  # RGB是反着的
+                    if angle2 <= 3.14:
+                        if angle2 > 2.5:
+                            loss = (3.14 - angle2) / 3.14 * 2
+                            cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle2 < 3.14 / 2:
+                                angle2 = 3.14 / 2
+                            loss = (3.14 - angle2) / 3.14 * 2
+                            cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
+                                       (0, 255, 0),
+                                       -1)  # RGB是反着的
+                    if angle4 <= 3.14:
+                        if angle4 > 2.5:
+                            loss = (3.14 - angle4) / 3.14 * 2
+                            cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle4 < 3.14 / 2:
+                                angle4 = 3.14 / 2
+                            loss = (3.14 - angle4) / 3.14 * 2
+                            cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
+                                       (0, 255, 0),
+                                       -1)  # RGB是反着的
 
-                img_pil = Image.fromarray(img)
-                draw = ImageDraw.Draw(img_pil)
-                if angle1 < 3.14 / 5:
-                    draw.text((100, 100), "请继续抬高右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
-                if angle3 < 3.14 / 5:
-                    draw.text((100, 120), "请继续抬高左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
-                if angle2 > 2:
-                    draw.text((100, 140), "请收紧右臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
-                if angle2 > 2:
-                    draw.text((100, 160), "请收紧左臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
-                img = np.array(img_pil)
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    if angle1 < 3.14 / 5:
+                        draw.text((100, 100), "请继续抬高右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle3 < 3.14 / 5:
+                        draw.text((100, 120), "请继续抬高左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle2 > 2:
+                        draw.text((100, 140), "请收紧右臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle4 > 2:
+                        draw.text((100, 160), "请收紧左臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+            elif (type == 2):#俯卧撑
+                # 2 3 4 是右肩右肘右手腕   5 6 7 是左肩左肘左手腕  8  11是右胯和左胯 9右膝  10右脚踝  12左膝  13左脚踝
+                if not (mainpose.keypoints[2][0] != -1 and mainpose.keypoints[2][1] != -1 and mainpose.keypoints[3][
+                    0] != -1 and mainpose.keypoints[3][1] != -1 and mainpose.keypoints[4][0] != -1 and
+                        mainpose.keypoints[4][1] != -1 and mainpose.keypoints[5][0] != -1 and mainpose.keypoints[5][
+                            1] != -1 and mainpose.keypoints[6][0] != -1 and mainpose.keypoints[6][1] != -1 and
+                        mainpose.keypoints[7][0] != -1 and mainpose.keypoints[7][1] != -1):
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    draw.text((100, 100), "请退后几步，露出全身", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+                else:
+                    cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    a = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[3][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[3][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[8][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[3][0]) ** 2 + (
+                            mainpose.keypoints[8][1] - mainpose.keypoints[3][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle1 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右肩角度
+
+                    a = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[4][0]) ** 2 + (
+                            mainpose.keypoints[3][1] - mainpose.keypoints[4][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[2][0]) ** 2 + (
+                            mainpose.keypoints[3][1] - mainpose.keypoints[2][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[4][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[4][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle2 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右肘角度
+
+                    a = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[6][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[6][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[11][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[11][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[6][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[6][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle3 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左肩角度
+
+                    a = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[7][0]) ** 2 + (
+                            mainpose.keypoints[6][1] - mainpose.keypoints[7][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[5][0]) ** 2 + (
+                            mainpose.keypoints[6][1] - mainpose.keypoints[5][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[7][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[7][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle4 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左肘角度
+                    a = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[8][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[8][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[9][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[9][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle5 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右胯角度
+                    a = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[8][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[10][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[10][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[10][0]) ** 2 + (
+                            mainpose.keypoints[8][1] - mainpose.keypoints[10][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle6 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右膝角度
+                    a = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[5][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[5][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[12][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[12][1]) ** 2)
+                    if(a!=0 and b!=0 and c!=0):
+                        angle7 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左胯角度
+                    a = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[12][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[13][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[13][1] - mainpose.keypoints[12][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[13][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[13][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle8 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左膝角度
+
+                    # 认为肩部90-120 肘90-120 胯0-30 膝150-180
+                    # 按照角度在20的圆内画圆盘
+                    if angle1 > 0:
+                        if angle1 < 3.14 / 2:
+                            cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                       int(20 * angle1 / 3.14*2), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle1 > 3.14 / 2:
+                                if angle1<3.14/1.5:
+                                    angle1 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                               int(20), (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                       int(20 * (3.14-angle1) / 3.14*3), (0, 0,255),
+                                       -1)  # RGB是反着的
+                    if angle3 > 0:
+                        if angle3 < 3.14 / 2:
+                            cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                       int(20 * angle3 / 3.14*2), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle3 <= 3.14 / 2:
+                                if angle3<3.14/1.5:
+                                    angle3 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                               int(20), (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                       int(20 * (3.14-angle3) / 3.14*3), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                    if angle2 >= 0:
+                        if angle2 < 3.14/2:
+                            loss = (angle2) / 3.14 * 2
+                            cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle2 > 3.14 / 2:
+                                if angle2 < 3.14 / 1.5:
+                                    angle2 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = (3.14-angle2)/ 3.14 * 3
+                                    cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
+                                            (0, 0,255),
+                                            -1)  # RGB是反着的
+                    if angle4 >= 0:
+                        if angle4 < 3.14/2:
+                            loss = (angle4) / 3.14 * 2
+                            cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle4 > 3.14 / 2:
+                                if angle4 < 3.14 / 1.5:
+                                    angle4 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = (3.14-angle4) / 3.14 * 3
+                                    cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
+                                            (0, 0,255),
+                                            -1)  # RGB是反着的
+                    if angle5 >= 0:
+                        if(angle5==3.14):
+                            angle5=0
+                        if angle5 > 3.14/6:
+                            loss = (3.14 - angle5) / 3.14*1.2
+                            cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle5 < 3.14 / 6:
+
+                                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                    if angle7 >= 0:
+                        if (angle7 == 3.14):
+                            angle7 = 0
+                        if angle7 > 3.14/6:
+                            loss = (3.14 - angle7) / 3.14 * 1.2
+                            cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle7 < 3.14 / 6:
+
+                                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                    if angle6 >= 0:
+                        if(angle6==0):
+                            angle6=3.14
+                        if angle6 < 3.14*5/6:
+                            loss = (angle6) / 3.14 * 1.2
+                            cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle6 > 3.14 *5/6:
+                                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                    if angle8 >= 0:
+                        if (angle8 == 0):
+                            angle8 = 3.14
+                        if angle8 < 3.14*5/6:
+                            loss = (angle8) / 3.14 * 1.2
+                            cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle8 > 3.14 *5/6:
+                                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    if angle1 > 3.14 /1.5:
+                        draw.text((100, 100), "请后收右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle3 > 3.14 / 1.5:
+                        draw.text((100, 120), "请后收左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle1 < 3.14 / 2:
+                        draw.text((100, 140), "请前伸右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle3 < 3.14 / 2:
+                        draw.text((100, 160), "请前伸左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle2 < 3.14/2:
+                        draw.text((100, 180), "请上支右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle4 < 3.14/2:
+                        draw.text((100, 200), "请上支左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle2 > 3.14/1.5:
+                        draw.text((100, 220), "请后收右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle4 > 3.14/1.5:
+                        draw.text((100, 240), "请后收左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle5 > 3.14/6:
+                        draw.text((100, 260), "请下移右臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle7 > 3.14/6:
+                        draw.text((100, 280), "请下移左臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle6 < 3.14*5/6:
+                        draw.text((100, 300), "请伸直右膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle8 < 3.14*5/6:
+                        draw.text((100, 320), "请伸直左膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+
+
+            elif (type == 3):# 马步
+                # 2 3 4 是右肩右肘右手腕   5 6 7 是左肩左肘左手腕  8  11是右胯和左胯 9右膝  10右脚踝  12左膝  13左脚踝
+                if not (mainpose.keypoints[2][0] != -1 and mainpose.keypoints[2][1] != -1 and mainpose.keypoints[3][
+                    0] != -1 and mainpose.keypoints[3][1] != -1 and mainpose.keypoints[4][0] != -1 and
+                        mainpose.keypoints[4][1] != -1 and mainpose.keypoints[5][0] != -1 and mainpose.keypoints[5][
+                            1] != -1 and mainpose.keypoints[6][0] != -1 and mainpose.keypoints[6][1] != -1 and
+                        mainpose.keypoints[7][0] != -1 and mainpose.keypoints[7][1] != -1):
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    draw.text((100, 100), "请退后几步，露出全身", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+                else:
+                    cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    a = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[3][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[3][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[8][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[3][0]) ** 2 + (
+                            mainpose.keypoints[8][1] - mainpose.keypoints[3][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle1 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右肩角度
+
+                    a = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[4][0]) ** 2 + (
+                            mainpose.keypoints[3][1] - mainpose.keypoints[4][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[3][0] - mainpose.keypoints[2][0]) ** 2 + (
+                            mainpose.keypoints[3][1] - mainpose.keypoints[2][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[4][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[4][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle2 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右肘角度
+
+                    a = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[6][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[6][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[11][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[11][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[6][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[6][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle3 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左肩角度
+
+                    a = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[7][0]) ** 2 + (
+                            mainpose.keypoints[6][1] - mainpose.keypoints[7][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[6][0] - mainpose.keypoints[5][0]) ** 2 + (
+                            mainpose.keypoints[6][1] - mainpose.keypoints[5][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[7][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[7][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle4 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左肘角度
+                    a = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[8][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[8][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[9][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[9][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle5 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右胯角度
+                    a = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[8][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[10][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[10][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[10][0]) ** 2 + (
+                            mainpose.keypoints[8][1] - mainpose.keypoints[10][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle6 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右膝角度
+                    a = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[5][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[5][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[12][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[12][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle7 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左胯角度
+                    a = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[12][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[13][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[13][1] - mainpose.keypoints[12][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[13][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[13][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle8 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左膝角度
+
+                    # 认为肩部角度越小越好  20度标准   胯90-120 膝90-120
+                    # 按照角度在20的圆内画圆盘
+                    if angle1 > 0:
+                        if angle1 > 3.14 / 9:
+                            cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                       int(20 * (3.14 - angle1) / 3.14), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle1 <= 3.14 / 9:
+                                angle1 = 3.14 / 9
+                            cv2.circle(img, (mainpose.keypoints[2][0], mainpose.keypoints[2][1]),
+                                       int(20), (0, 255, 0),
+                                       -1)  # RGB是反着的
+                    if angle3 > 0:
+                        if angle3 > 3.14 / 9:
+                            cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                       int(20 * (3.14 - angle3) / 3.14), (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle3 <= 3.14 / 9:
+                                angle3 = 3.14 / 9
+                            cv2.circle(img, (mainpose.keypoints[5][0], mainpose.keypoints[5][1]),
+                                       int(20), (0, 255, 0),
+                                       -1)  # RGB是反着的
+                    # if angle2 <= 3.14:
+                    #     if angle2 > 3.14/2:
+                    #         loss = (3.14 - angle2) / 3.14 * 2
+                    #         cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
+                    #                    (0, 0, 255),
+                    #                    -1)  # RGB是反着的
+                    #     else:
+                    #         if angle2 < 3.14 / 2:
+                    #             if angle2 > 3.14 / 3:
+                    #                 angle2 = 3.14 / 2
+                    #                 cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]),
+                    #                            int(20),
+                    #                            (0, 255, 0),
+                    #                            -1)  # RGB是反着的
+                    #             else:
+                    #                 loss = angle2/ 3.14 * 2
+                    #                 cv2.circle(img, (mainpose.keypoints[3][0], mainpose.keypoints[3][1]), int(20 * loss),
+                    #                         (0, 0,255),
+                    #                         -1)  # RGB是反着的
+                    # if angle4 <= 3.14:
+                    #     if angle4 > 3.14/2:
+                    #         loss = (3.14 - angle4) / 3.14 * 2
+                    #         cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
+                    #                    (0, 0, 255),
+                    #                    -1)  # RGB是反着的
+                    #     else:
+                    #         if angle4 < 3.14 / 2:
+                    #             if angle4 > 3.14 / 3:
+                    #                 angle4 = 3.14 / 2
+                    #                 cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]),
+                    #                            int(20),
+                    #                            (0, 255, 0),
+                    #                            -1)  # RGB是反着的
+                    #             else:
+                    #                 loss = angle4 / 3.14 * 2
+                    #                 cv2.circle(img, (mainpose.keypoints[6][0], mainpose.keypoints[6][1]), int(20 * loss),
+                    #                         (0, 0,255),
+                    #                         -1)  # RGB是反着的
+                    if angle5 >= 0:
+                        if angle5 > 3.14 / 1.5:
+                            loss = (3.14 - angle5) / 3.14 * 3
+                            cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle5 < 3.14 / 1.5:
+                                if angle5 > 3.14 / 2:
+                                    angle5 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = angle5 / 3.14 * 2
+                                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+                    if angle7 >= 0:
+                        if angle7 > 3.14 / 1.5:
+                            loss = (3.14 - angle7) / 3.14 * 3
+                            cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle7 < 3.14 / 1.5:
+                                if angle7 > 3.14 / 2:
+                                    angle7 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = angle7 / 3.14 * 2
+                                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+                    if angle6 >= 0:
+                        if angle6 > 3.14 / 1.5:
+                            loss = (3.14 - angle6) / 3.14 * 3
+                            cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle6 < 3.14 / 1.5:
+                                if angle6 > 3.14 / 2:
+                                    angle6 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = angle6 / 3.14 * 2
+                                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+                    if angle8 >= 0:
+                        if angle8 > 3.14 / 1.5:
+                            loss = (3.14 - angle8) / 3.14 * 3
+                            cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle8 < 3.14 / 1.5:
+                                if angle8 > 3.14 / 2:
+                                    angle8 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = angle8 / 3.14 * 2
+                                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    if angle1 > 3.14 / 9:
+                        draw.text((100, 100), "请继续夹紧右上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle3 > 3.14 / 9:
+                        draw.text((100, 120), "请继续加紧左上臂", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    # if angle2 > 3.14/2:
+                    #     draw.text((100, 140), "请上提右臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    # if angle4 > 3.14/2:
+                    #     draw.text((100, 160), "请上提左臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    # if angle2 < 3.14/3:
+                    #     draw.text((100, 180), "请下放右臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    # if angle4 < 3.14/3:
+                    #     draw.text((100, 200), "请下方左臂肱二头肌", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle5 > 3.14 / 1.5:
+                        draw.text((100, 220), "请下蹲右臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle7 > 3.14 / 1.5:
+                        draw.text((100, 240), "请下蹲左臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle5 < 3.14 / 2:
+                        draw.text((100, 260), "请上抬右臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle7 < 3.14 / 2:
+                        draw.text((100, 280), "请上抬左臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle6 > 3.14 / 1.5:
+                        draw.text((100, 300), "请继续弯曲右膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle8 > 3.14 / 1.5:
+                        draw.text((100, 320), "请继续弯曲左膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle6 < 3.14 / 2:
+                        draw.text((100, 340), "请适当抬直右膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle8 < 3.14 / 2:
+                        draw.text((100, 360), "请适当抬直左膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+            elif (type == 4):#深蹲
+                #8  11是右胯和左胯 9右膝  10右脚踝  12左膝  13左脚踝
+                if not (mainpose.keypoints[2][0] != -1 and mainpose.keypoints[2][1] != -1 and mainpose.keypoints[3][
+                    0] != -1 and mainpose.keypoints[3][1] != -1 and mainpose.keypoints[4][0] != -1 and
+                        mainpose.keypoints[4][1] != -1 and mainpose.keypoints[5][0] != -1 and mainpose.keypoints[5][
+                            1] != -1 and mainpose.keypoints[6][0] != -1 and mainpose.keypoints[6][1] != -1 and
+                        mainpose.keypoints[7][0] != -1 and mainpose.keypoints[7][1] != -1):
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    draw.text((100, 100), "请退后几步，露出全身", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
+                else:
+                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]), 20, (209, 216, 129),
+                               2)  # RGB是反着的
+
+                    a = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[8][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[8][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[2][0] - mainpose.keypoints[9][0]) ** 2 + (
+                            mainpose.keypoints[2][1] - mainpose.keypoints[9][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle5 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右胯角度
+                    a = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[8][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[8][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[9][0] - mainpose.keypoints[10][0]) ** 2 + (
+                            mainpose.keypoints[9][1] - mainpose.keypoints[10][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[8][0] - mainpose.keypoints[10][0]) ** 2 + (
+                            mainpose.keypoints[8][1] - mainpose.keypoints[10][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle6 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 右膝角度
+                    a = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[5][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[5][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[12][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[5][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[5][1] - mainpose.keypoints[12][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle7 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左胯角度
+                    a = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[12][1]) ** 2)
+                    b = math.sqrt((mainpose.keypoints[13][0] - mainpose.keypoints[12][0]) ** 2 + (
+                            mainpose.keypoints[13][1] - mainpose.keypoints[12][1]) ** 2)
+                    c = math.sqrt((mainpose.keypoints[11][0] - mainpose.keypoints[13][0]) ** 2 + (
+                            mainpose.keypoints[11][1] - mainpose.keypoints[13][1]) ** 2)
+                    if (a != 0 and b != 0 and c != 0):
+                        angle8 = math.acos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                    # 左膝角度
+
+                    # 认为胯60-90 膝30-60
+                    # 按照角度在20的圆内画圆盘
+                    if angle5 >=0:
+                        if angle5 < 3.14 / 3:
+                            loss = (angle5) / 3.14 * 3
+                            cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle5 > 3.14 / 3:
+                                if angle5 < 3.14 / 2:
+                                    angle5 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = (3.14-angle5) / 3.14 * 2
+                                    cv2.circle(img, (mainpose.keypoints[8][0], mainpose.keypoints[8][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+                    if angle7 >=0:
+                        if angle7 < 3.14 / 3:
+                            loss = (angle7) / 3.14 * 3
+                            cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle7 > 3.14 / 3:
+                                if angle7 < 3.14 / 2:
+                                    angle7 = 3.14 / 2
+                                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = (3.14-angle7) / 3.14 * 2
+                                    cv2.circle(img, (mainpose.keypoints[11][0], mainpose.keypoints[11][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+                    if angle6 >=0:
+                        if angle6 > 3.14 / 3:
+                            loss = (3.14 - angle6) / 3.14 * 1.5
+                            cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle6 < 3.14 / 3:
+                                if angle6 > 3.14 / 6:
+                                    angle6 = 3.14 / 3
+                                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = angle6 / 3.14 * 6
+                                    cv2.circle(img, (mainpose.keypoints[9][0], mainpose.keypoints[9][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+                    if angle8>=0:
+                        if angle8 > 3.14 / 3:
+                            loss = (3.14 - angle8) / 3.14 * 1.5
+                            cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]), int(20 * loss),
+                                       (0, 0, 255),
+                                       -1)  # RGB是反着的
+                        else:
+                            if angle8 < 3.14 / 3:
+                                if angle8 > 3.14 / 6:
+                                    angle8 = 3.14 / 3
+                                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]),
+                                               int(20),
+                                               (0, 255, 0),
+                                               -1)  # RGB是反着的
+                                else:
+                                    loss = angle8 / 3.14 * 6
+                                    cv2.circle(img, (mainpose.keypoints[12][0], mainpose.keypoints[12][1]),
+                                               int(20 * loss),
+                                               (0, 0, 255),
+                                               -1)  # RGB是反着的
+
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    if angle5 > 3.14 / 2:
+                        draw.text((100, 220), "请下蹲右臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle7 > 3.14 / 2:
+                        draw.text((100, 240), "请下蹲左臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle5 < 3.14 / 3:
+                        draw.text((100, 260), "请上抬右臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle7 < 3.14 / 3:
+                        draw.text((100, 280), "请上抬左臀部", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle6 > 3.14 / 3:
+                        draw.text((100, 300), "请继续弯曲右膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle8 > 3.14 / 3:
+                        draw.text((100, 320), "请继续弯曲左膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle6 < 3.14 / 6:
+                        draw.text((100, 340), "请适当抬直右膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    if angle8 < 3.14 / 6:
+                        draw.text((100, 360), "请适当抬直左膝", font=font_1, fill=(0, 255, 0))  # xy坐标, 内容, 字体, 颜色
+                    img = np.array(img_pil)
 
 
         if track:
