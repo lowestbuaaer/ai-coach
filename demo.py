@@ -956,6 +956,7 @@ def run_demo(net, image_provider, height_size, cpu, track, smooth, type):
         cv2.imshow('Lightweight Human Pose Estimation Python Demo', img)
         key = cv2.waitKey(delay)
         if key == 27:  # esc
+            cv2.destroyAllWindows()
             return
         elif key == 112:  # 'p'
             if delay == 1:
@@ -964,7 +965,7 @@ def run_demo(net, image_provider, height_size, cpu, track, smooth, type):
                 delay = 1
 
 
-if __name__ == '__main__':
+def run(type):
     parser = argparse.ArgumentParser(
         description='''Lightweight human pose estimation python demo.
                        This is just for quick results preview.
@@ -994,4 +995,6 @@ if __name__ == '__main__':
     else:
         args.track = 0
     # 实际的运行方法,type决定动作类型，其他的参数可以直接使用默认值,1是举杠铃,2是俯卧撑,3是马步,4是深蹲
-    run_demo(net, frame_provider, args.height_size, args.cpu, args.track, args.smooth, args.type)
+    # run_demo(net, frame_provider, args.height_size, args.cpu, args.track, args.smooth, args.type)
+    run_demo(net, frame_provider, args.height_size, args.cpu, args.track, args.smooth, type)
+
